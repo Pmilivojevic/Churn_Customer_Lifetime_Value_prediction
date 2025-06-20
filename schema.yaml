@@ -1,1 +1,1 @@
-schema: schema
+COLUMNS: [activity_month, account_id, brand_id, reg_date, ftd_date, qp_date, ben_login_id, tracker_id, player_reg_product, total_deposit, total_handle, total_ngr]
