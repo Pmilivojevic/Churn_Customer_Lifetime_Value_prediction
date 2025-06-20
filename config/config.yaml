@@ -1,0 +1,6 @@
+artifacts_root: artifacts
+
+data_ingestion:
+  root_dir: artifacts/data_ingestion
+  source_URL: https://docs.google.com/spreadsheets/d/1taus8Wx2s9xcavripC_TMuDNF2vVSVZ_/edit?usp=sharing&ouid=113748405694445668234&rtpof=true&sd=true
+  local_data_file: artifacts/data_ingestion/sample_data__technical_assessment.xlsx

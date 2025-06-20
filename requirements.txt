@@ -1,0 +1,12 @@
+pandas
+tqdm
+PyYAML
+matplotlib
+seaborn
+scikit-learn
+notebook
+python-box==6.0.2
+types-PyYAML
+ensure==1.0.2
+
+-e .
