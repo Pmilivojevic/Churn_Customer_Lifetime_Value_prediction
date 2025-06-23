@@ -1,1 +1,5 @@
-params: params
+data_transformation:
+  test_size: 0.2
+  churn_months_thr: 3
+
+training_params: params

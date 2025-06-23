@@ -1,6 +1,10 @@
 from churn_pred.constants import *
 from churn_pred.utils.main_utils import create_directories, read_yaml
-from churn_pred.entity.config_entity import DataIngestionConfig, DataValidationConfig
+from churn_pred.entity.config_entity import (
+    DataIngestionConfig,
+    DataValidationConfig,
+    DataTransformationConfig
+)
 
 class ConfigurationManager:
     def __init__(
@@ -42,3 +46,26 @@ class ConfigurationManager:
         )
         
         return data_validation_config
+    
+    def get_data_transformation_config(self) -> DataTransformationConfig:
+        config = self.config.data_transformation
+        transformation_params = self.params.data_transformation
+        dataset_val_status_file = self.config.data_validation.STATUS_FILE
+        
+        with open(dataset_val_status_file, 'r') as f:
+            status = f.read()
+        
+        status = bool(str.split(status)[-1])
+        
+        create_directories([config.root_dir])
+        
+        data_transformation_config = DataTransformationConfig(
+            root_dir=Path(config.root_dir),
+            data_file=Path(config.data_file),
+            train_file=Path(config.train_file,),
+            test_file=Path(config.test_file),
+            transfrmation_params=transformation_params,
+            dataset_val_status=status
+        )
+        
+        return data_transformation_config
