@@ -10,5 +10,8 @@ types-PyYAML
 ensure==1.0.2
 openpyxl
 xgboost
+fastapi
+uvicorn
+python-multipart
 
 -e .

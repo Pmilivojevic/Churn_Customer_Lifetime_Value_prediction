@@ -18,7 +18,7 @@ class ModelTrainer:
         lg_y_train = train_data['churn_next_month']
         xgb_y_train = train_data['early_churn']
         
-        X_train = train_data.drop(columns=['churn_next_month', 'early_churn'])
+        X_train = train_data.drop(columns=['churn_next_month', 'early_churn'], errors='ignore')
         
         return X_train, lg_y_train, xgb_y_train
     
