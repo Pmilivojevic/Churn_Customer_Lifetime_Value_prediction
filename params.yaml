@@ -1,5 +1,43 @@
 data_transformation:
   test_size: 0.2
+  no_activity_thr: 2
   churn_months_thr: 3
+  early_churn_thr: 1
 
-training_params: params
+model_params: 
+  logistic_regression:
+    penalty: 'l2'
+    dual: False
+    tol: 0.0001
+    C: 1.0
+    fit_intercept: True
+    intercept_scaling: 1
+    class_weight: 'balanced'
+    # random_state: None
+    solver: 'lbfgs'
+    max_iter: 1000
+    multi_class: 'deprecated'
+    verbose: 0
+    warm_start: False
+    # n_jobs: None
+    # l1_ratio: None
+  
+  xgb_classifier:
+    base_score: 0.5
+    colsample_bylevel: 1
+    colsample_bytree: 1
+    gamma: 0
+    learning_rate: 0.1
+    max_delta_step: 0
+    max_depth: 10
+    min_child_weight: 1
+    # missing: None
+    n_estimators: 100
+    nthread: -1
+    objective: 'binary:logistic'
+    reg_alpha: 0
+    reg_lambda: 1
+    scale_pos_weight: 1
+    seed: 0
+    silent: True
+    subsample: 1

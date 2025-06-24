@@ -3,7 +3,9 @@ from churn_pred.utils.main_utils import create_directories, read_yaml
 from churn_pred.entity.config_entity import (
     DataIngestionConfig,
     DataValidationConfig,
-    DataTransformationConfig
+    DataTransformationConfig,
+    ModelTrainerConfig,
+    ModelEvaluationConfig
 )
 
 class ConfigurationManager:
@@ -69,3 +71,37 @@ class ConfigurationManager:
         )
         
         return data_transformation_config
+    
+    def get_model_trainer_config(self) -> ModelTrainerConfig:
+        config = self.config.model_trainer
+        params = self.params.model_params
+        
+        create_directories([config.root_dir])
+        
+        model_trainer_config = ModelTrainerConfig(
+            root_dir=Path(config.root_dir),
+            train_file=Path(config.train_file),
+            model_1=Path(config.model_1),
+            model_1_scaler=Path(config.model_1_scaler),
+            model_2=Path(config.model_2),
+            model_params=params
+        )
+        
+        return model_trainer_config
+    
+    def get_model_evaluation_config(self) -> ModelEvaluationConfig:
+        config = self.config.model_evaluation
+        
+        create_directories([config.root_dir, config.model_1_stats, config.model_2_stats])
+        
+        model_evaluation_config = ModelEvaluationConfig(
+            root_dir=Path(config.root_dir),
+            test_file=Path(config.test_file),
+            model_1=Path(config.model_1),
+            model_1_scaler=Path(config.model_1_scaler),
+            model_2=Path(config.model_2),
+            model_1_stats=Path(config.model_1_stats),
+            model_2_stats=Path(config.model_2_stats)
+        )
+        
+        return model_evaluation_config

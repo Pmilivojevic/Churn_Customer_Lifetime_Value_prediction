@@ -16,3 +16,18 @@ data_transformation:
   train_file: artifacts/data_transformation/train.csv
   test_file: artifacts/data_transformation/test.csv
 
+model_trainer:
+  root_dir: artifacts/model_trainer
+  train_file: artifacts/data_transformation/train.csv
+  model_1: artifacts/model_trainer/model_1.pkl
+  model_1_scaler: artifacts/model_trainer/model_1_scaler.pkl
+  model_2: artifacts/model_trainer/model_2.pkl
+
+model_evaluation:
+  root_dir: artifacts/model_evaluation
+  test_file: artifacts/data_transformation/test.csv
+  model_1: artifacts/model_trainer/model_1.pkl
+  model_1_scaler: artifacts/model_trainer/model_1_scaler.pkl
+  model_2: artifacts/model_trainer/model_2.pkl
+  model_1_stats: artifacts/model_evaluation/model_1_stats
+  model_2_stats: artifacts/model_evaluation/model_2_stats

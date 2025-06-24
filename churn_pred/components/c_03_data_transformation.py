@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import numpy as np
-# from datetime import datetime
 from sklearn.preprocessing import OneHotEncoder
 from churn_pred.entity.config_entity import DataTransformationConfig
 
@@ -10,7 +9,7 @@ class DataTransformation:
         self.config = config
     
     def loading_data(self):
-        df = pd.read_excel(self.config.data_file, engine='openpyxl')
+        df = pd.read_excel(self.config.data_file)
         
         return df
     
@@ -43,17 +42,21 @@ class DataTransformation:
     def log_transform(self, df):
         print("Features names:",df.columns.to_list())
         
-        financial_features = df.select_dtypes(include=np.float64).columns.to_list()
+        financial_features = ['total_deposit', 'total_handle', 'total_ngr']
         
         print("Names of financial features:", financial_features)
         
         for col in financial_features:
             df[f'log_{col}'] = np.log1p(df[col])
         
+        df = df.drop(columns=financial_features)
+        
         return df
         
     def feature_engineering(self, df):
-        df = df.sort_values('activity_month')
+        # df = df.sort_values('activity_month')
+        
+        df = df.sort_values(['account_id', 'activity_month'])
         
         df['months_active'] = ((
             df['activity_month'].dt.year - df['ftd_date'].dt.year
@@ -61,23 +64,50 @@ class DataTransformation:
             df['activity_month'].dt.month - df['ftd_date'].dt.month
         )).astype(int)
         
-        # Find last month of activity for each player
-        last_months = df.groupby('account_id')['activity_month'].max().reset_index()
-        last_months.columns = ['account_id', 'last_activity']
+        df['has_qp'] = df['qp_date'].notnull().astype(int)
+        df['days_ftd_to_qp'] = (df['qp_date'] - df['ftd_date']).dt.days.fillna(-1)
+        df['reg_date'] = df['reg_date'].dt.month
+
+        df['next_activity_month'] = df.groupby('account_id')['activity_month'].shift(-1)
+        df['months_to_next_activity'] = (df['next_activity_month'] - df['activity_month']).dt.days / 30
+
+        # Define churn: no activity in next 2 months = churn
+        df['churn_next_month'] = (
+            df['months_to_next_activity'] >= self.config.transfrmation_params.no_activity_thr
+        ).astype(int)
         
-        # Merge last_activity back to main df
-        df = df.merge(last_months, on='account_id')
-        
-        # Calculate months_since_last_activity
-        df['months_since_last_activity'] = (
-            (
-                df['last_activity'].dt.to_period('M') - df['activity_month'].dt.to_period('M')
-            ).apply(lambda x: x.n)
-        )
-        
+        # Find player's last activity month
+        last_month_df = df.groupby('account_id')['activity_month'].max().reset_index()
+        last_month_df.rename(columns={'activity_month': 'last_activity_month'}, inplace=True)
+
+        # Merge back
+        df = df.merge(last_month_df, on='account_id')
+
+        # Compute months since last activity per record
+        df['months_since_last_activity'] = ((df['last_activity_month'] - df['activity_month']).dt.days) / 30
+
+        # Label churners: no activity ≥ 2 months after last activity
         df['churned'] = (
             df['months_since_last_activity'] >= self.config.transfrmation_params.churn_months_thr
         ).astype(int)
+        
+        # 
+        df['early_churn'] = (
+            df['months_active'] <= self.config.transfrmation_params.early_churn_thr
+        ).astype(int)
+        
+        df = df.drop(columns=[
+            'activity_month',
+            'next_activity_month',
+            'months_to_next_activity',
+            'last_activity_month',
+            'months_since_last_activity',
+            'ftd_date',
+            'churned',
+            'account_id',
+            'tracker_id',
+            'qp_date'
+        ], errors='ignore')
         
         return df
     
@@ -98,16 +128,13 @@ class DataTransformation:
         df = pd.concat([df, encoded], axis=1)
         df.drop(categorical_features, axis=1, inplace=True)
         
-        return df, encoded.columns.to_list()
+        return df
     
-    def train_test_split_and_save(self, df, encoded_columns):
-        feature_columns = ['months_active', 'log_total_deposit', 'log_total_handle', 'log_total_ngr'] + encoded_columns
-        data_df = df[feature_columns]
+    def train_test_split_and_save(self, df):
+        split_idx = int((1 - self.config.transfrmation_params.test_size) * len(df))
         
-        split_idx = int((1 - self.config.transfrmation_params.test_size) * len(data_df))
-        
-        train_df = data_df.iloc[:split_idx]
-        test_df = data_df.iloc[split_idx:]
+        train_df = df.iloc[:split_idx]
+        test_df = df.iloc[split_idx:]
         
         train_df.to_csv(self.config.train_file, index=False)
         test_df.to_csv(self.config.test_file, index=False)
@@ -118,10 +145,10 @@ class DataTransformation:
                 df = self.loading_data()
                 df = self.handling_missing_values(df)
                 df = self.handling_datetime_features(df)
-                df = self.log_transform(df)
+                # df = self.log_transform(df)
                 df = self.feature_engineering(df)
-                df, encoded_columns = self.handling_categorical_features(df)
-                self.train_test_split_and_save(df, encoded_columns)
+                df = self.handling_categorical_features(df)
+                self.train_test_split_and_save(df)
             else:
                 print("The dataset has already been split and prepared.")
         else:
